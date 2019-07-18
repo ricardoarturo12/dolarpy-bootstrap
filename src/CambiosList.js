@@ -29,7 +29,7 @@ class CambiosList extends React.Component {
 
         this.state = {
             bancos: [],
-            nombres: [],
+            // nombres: [{banco: []}],
             loading: true,
             error: null,
             updated: null,
@@ -45,23 +45,31 @@ class CambiosList extends React.Component {
     componentDidMount() {
         this.setState({ loading: true, error: null });
         this.fetchData();
-        this.intervalId = setInterval(this.fetchData, 100000);
+        this.intervalId = setInterval(this.fetchData, 10000);
     }
 
     fetchData = async () => {
-        fetch('https://dolar.melizeche.com/api/1.0')
+        // const proxyurl = 'https://cors-anywhere.herokuapp.com/'
+        const url = 'https://dolar.melizeche.com/api/1.0/'
+        // fetch(url + proxyurl)
+        fetch(url)
             .then(results => {
                 return results.json();
             })
             .then(data => {
                 this.setState({
-                    bancos: [(data.dolarpy.bbva), (data.dolarpy.bcp), (data.dolarpy.cambiosalberdi),
-                        (data.dolarpy.cambioschaco), (data.dolarpy.eurocambios), (data.dolarpy.interfisa), (data.dolarpy.set),
-                        (data.dolarpy.mydcambios), (data.dolarpy.maxicambios)],
+                    bancos: [{ id: 'bbva', descripcion: 'BBVA', valor: (data.dolarpy.bbva) }, 
+                        { id: 'bcp', descripcion: 'BCP', valor: (data.dolarpy.bcp) }, 
+                        { id: 'cambiosalberdi', descripcion: 'Cambios Alberdi', valor: (data.dolarpy.cambiosalberdi)},
+                        { id: 'cambioschaco', descripcion: 'Cambios Chaco', valor: (data.dolarpy.cambioschaco) },
+                        { id: 'interfisa', descripcion: 'Interfisa', valor: (data.dolarpy.interfisa) },
+                        { id: 'set', descripcion: 'SET', valor:  (data.dolarpy.set) },
+                        { id: 'mydcambios', descripcion: 'MYD Cambios', valor: (data.dolarpy.mydcambios) },
+                        { id: 'maxicambios', descripcion: 'Maxi Cambios', valor: (data.dolarpy.maxicambios) }],
+                    // nombres: {banco: (data.dolarpy)},
                     loading: false,
                     updated: data.updated
                 });
-                
             })
             .catch(error => this.setState({ error, loading: false }));
     }
@@ -71,10 +79,10 @@ class CambiosList extends React.Component {
         this.fetchData()
     }
 
-
     render() {
         const monto = this.state.monto
         const bancos = this.state.bancos
+
         if (this.state.error) {
             return <div> Error: {this.state.error.message}</div>;
         }else if (this.state.loading) {
@@ -90,22 +98,33 @@ class CambiosList extends React.Component {
                                 type="text"
                                 value={this.state.monto}
                             />
-                            <PrintFormat cotizacion={this.state.monto} monto={1} />
+                            <CurrencyFormat value={monto}
+                                decimalSeparator={','}
+                                thousandSeparator={'.'}
+                                displayType={'text'}
+                                prefix={'$ '}/>
                             <br/>
                             <TasaCambio cambios={monto}/>
                         </div>
-                        <CardColumns>
+                        <CardColumns >
                             <ul className="list-unstyled">
-                                {bancos.map((number,index)=>
-                                    <li key={index}>
-                                        <Card className="p-2">
-                                            <Card.Title>
-                                                <center>
-                                                <p>{index}</p>
-                                                    <PrintFormat cotizacion={number.compra} monto={monto} />
+                                {bancos.map((number)=>
+                                    <li key={number.id}>
+                                        <Card className="Items">
+                                            <Card.Title >
+                                                <div className="Items_Banco">
+                                                    <center>{number.descripcion}</center>    
+                                                </div>
+                                                {/* <br/> */}
+                                                {/* <center> */}
+                                                    Compra:
+                                                    <PrintFormat cotizacion={number.valor.compra} monto={monto} />
+                                                {/* </center> */}
                                                 <br/>
-                                                    <PrintFormat cotizacion={number.venta} monto={monto} /> 
-                                                </center>
+                                                Venta:
+                                                {/* <div> */}
+                                                    <PrintFormat cotizacion={number.valor.venta} monto={monto} /> 
+                                                {/* </div>  */}
                                             </Card.Title>
                                         </Card>
                                             
@@ -113,10 +132,10 @@ class CambiosList extends React.Component {
                                 )}
                             </ul>
                         </CardColumns>
-                        <footer id="sticky-footer" className="py-4 bg-dark text-white-50">
+                        <footer id="sticky-footer" className="py-2 Footer">
                             <div className="container text-center">
                                 <p>Última actualización: {this.state.updated}</p>
-=                            </div>
+                            </div>
                         </footer>                        
                     </div>
                 )}
